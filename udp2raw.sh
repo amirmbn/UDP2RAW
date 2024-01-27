@@ -71,8 +71,8 @@ fi
 sleep 1
     echo ""
     echo -e "${YELLOW}Downloading and installing udp2raw for architecture: $system_architecture${NC}"
-curl -L -o udp2raw_amd64 https://github.com/Azumi67/udp2raw-core/raw/main/udp2raw_amd64
-curl -L -o udp2raw_x86 https://github.com/Azumi67/udp2raw-core/raw/main/udp2raw_x86
+curl -L -o udp2raw_amd64 https://github.com/amirmbn/UDP2RAW/raw/main/Core/udp2raw_amd64
+curl -L -o udp2raw_x86 https://github.com/amirmbn/UDP2RAW/raw/main/Core/udp2raw_x86
 sleep 1
 
 chmod +x udp2raw_amd64
