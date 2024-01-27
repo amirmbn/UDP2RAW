@@ -1,2 +1,25 @@
-# UDP2RAW
-A Tunnel which Turns UDP Traffic into Encrypted UDP/FakeTCP/ICMP Traffic by using Raw Socket
+# UDP Tunnel
+
+<div align="right">
+
+
+ - ابتدا سرور ایران را آپدیت کنید
+<div align="left">
+ 
+```
+apt update -y && apt upgrade -y
+```
+<div align="right">
+
+
+ - اسکریپت راه اندازی تانل بین سرور ایران و خارج
+<div align="left">
+ 
+```
+bash <(curl -Ls https://raw.githubusercontent.com/amirmbn/WireGuard/main/udp2raw.sh --ipv4)
+```
+<div align="right">
+
+
+ - شماره 1 مربوط به نصب udp2raw است
+ - شماره 2 و 3 مربوط به تنظیمات سرور ایران و خارج میباشد.
