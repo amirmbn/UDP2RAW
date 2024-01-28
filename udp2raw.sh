@@ -89,10 +89,6 @@ echo ""
 echo -e "${GREEN}All packages were installed and configured.${NC}"
 }
 
-logo() {
-    echo -e "\n${BLUE}https://github.com/amirmbn${NC}\n"
-}
-
 validate_port() {
     local port="$1"
     local exclude_ports=()
@@ -113,7 +109,7 @@ validate_port() {
 remote_func() {
     clear
     echo ""
-    echo -e "\e[33mTunnel Mode \e[92m[Default: IPV6]${NC}"
+    echo -e "\e[33mSelect EU Tunnel Mode${NC}"
     echo ""
     echo -e "${RED}1${NC}. ${YELLOW}IPV6${NC}"
     echo -e "${RED}2${NC}. ${YELLOW}IPV4${NC}"
@@ -134,7 +130,7 @@ remote_func() {
     esac
 
     while true; do
-        echo -ne "\e[33mEnter the Local server (IRAN) port \e[92m[Default: 443]${NC}: "
+        echo -ne "\e[33mEnter the Local server (IR) port \e[92m[Default: 443]${NC}: "
         read local_port
         if [ -z "$local_port" ]; then
             local_port=443
@@ -159,7 +155,7 @@ remote_func() {
     done
 
     echo ""
-    echo -ne "\e[33mEnter the Password for UDP2RAW \e[92m[This will be used on your local server (IRAN)]${NC}: "
+    echo -ne "\e[33mEnter the Password for UDP2RAW \e[92m[This will be used on your local server (IR)]${NC}: "
     read password
     echo ""
     echo -e "\e[33m protocol (Mode) (Local and remote should be the same)${NC}"
@@ -209,7 +205,7 @@ EOF
     systemctl start --now "udp2raw-s.service"
     sleep 1
 
-    echo -e "\e[92mRemote Server (Kharej) configuration has been adjusted and service started. Yours truly, Azumi${NC}"
+    echo -e "\e[92mRemote Server (EU) configuration has been adjusted and service started. Yours truly${NC}"
 echo ""
 GREEN='\033[0;92m'
 RED='\033[0;91m'
@@ -220,7 +216,8 @@ echo -e "${GREEN}Make sure to allow port ${RED}$remote_port${GREEN} on your fire
 
 local_func() {
     clear
-    echo -e "\e[33mTunnel Mode \e[92m[Default: IPV6]${NC}"
+    echo ""
+    echo -e "\e[33mSelect IR Tunnel Mode${NC}"
     echo ""
     echo -e "${RED}1${NC}. ${YELLOW}IPV6${NC}"
     echo -e "${RED}2${NC}. ${YELLOW}IPV4${NC}"
@@ -240,7 +237,7 @@ local_func() {
             ;;
     esac
     while true; do
-        echo -ne "\e[33mEnter the Local server (IRAN) port \e[92m[Default: 443]${NC}: "
+        echo -ne "\e[33mEnter the Local server (IR) port \e[92m[Default: 443]${NC}: "
         read remote_port
         if [ -z "$remote_port" ]; then
             remote_port=443
@@ -253,7 +250,7 @@ local_func() {
 
     while true; do
         echo ""
-        echo -ne "\e[33mEnter the Wireguard port - installed on kharej \e[92m[Default: 50820]${NC}: "
+        echo -ne "\e[33mEnter the Wireguard port - installed on EU \e[92m[Default: 50820]${NC}: "
         read local_port
         if [ -z "$local_port" ]; then
             local_port=50820
@@ -264,10 +261,10 @@ local_func() {
         fi
     done
     echo ""
-    echo -ne "\e[33mEnter the Remote server (Kharej) IPV6 / IPV4 (Based on your tunnel preference)\e[92m${NC}: "
+    echo -ne "\e[33mEnter the Remote server (EU) IPV6 / IPV4 (Based on your tunnel preference)\e[92m${NC}: "
     read remote_address
     echo ""
-    echo -ne "\e[33mEnter the Password for UDP2RAW \e[92m[The same as you set on remote server (Kharej)]${NC}: "
+    echo -ne "\e[33mEnter the Password for UDP2RAW \e[92m[The same as you set on remote server (EU)]${NC}: "
     read password
     echo ""
     echo -e "\e[33m protocol (Mode) \e[92m(Local and Remote shoud have the same value)${NC}"
@@ -321,7 +318,7 @@ systemctl restart "udp2raw-c.service"
 systemctl enable --now "udp2raw-c.service"
 systemctl start --now "udp2raw-c.service"
 
-echo -e "\e[92mLocal Server (IRAN) configuration has been adjusted and service started. Yours truly, Azumi${NC}"
+echo -e "\e[92mLocal Server (IR) configuration has been adjusted and service started. Yours truly${NC}"
 echo ""
 GREEN='\033[0;92m'
 RED='\033[0;91m'
