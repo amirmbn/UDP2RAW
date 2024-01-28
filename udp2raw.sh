@@ -113,9 +113,6 @@ validate_port() {
 remote_func() {
     clear
     echo ""
-    echo -e "     ${GREEN}Configuring Remote Server (KHAREJ)${NC}"
-    echo ""
-    echo ""
     echo -e "\e[33mTunnel Mode \e[92m[Default: IPV6]${NC}"
     echo ""
     echo -e "${RED}1${NC}. ${YELLOW}IPV6${NC}"
