@@ -16,7 +16,7 @@ apt update -y && apt upgrade -y
 <div align="left">
  
 ```
-bash <(curl -Ls https://raw.githubusercontent.com/amirmbn/UDP2RAW/main/udp2raw.sh --ipv4)
+bash <(curl -Ls https://raw.githubusercontent.com/amirmbn/UDP2RAW/main/udp2raw.sh)
 ```
 <div align="right">
 
