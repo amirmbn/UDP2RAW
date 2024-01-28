@@ -220,9 +220,6 @@ echo -e "${GREEN}Make sure to allow port ${RED}$remote_port${GREEN} on your fire
 
 local_func() {
     clear
-    echo ""
-    echo -e "     ${Green}Configuring Local server (Iran)${NC}"
-    echo ""
     echo -e "\e[33mTunnel Mode \e[92m[Default: IPV6]${NC}"
     echo ""
     echo -e "${RED}1${NC}. ${YELLOW}IPV6${NC}"
