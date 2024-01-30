@@ -384,7 +384,7 @@ while true; do
     echo -e "\e[36m 3\e[0m) \e[93mSet IR Tunnel"  
     echo ""
     echo -e "\e[36m 4\e[0m) \e[93mUninstall UDP2RAW"
-    echo -e "\e[36m 0\e[0m) \e[93mExit as Server"
+    echo -e "\e[36m 0\e[0m) \e[93mExit"
     echo ""
     echo ""
     echo -ne "\e[92mSelect an option \e[31m[\e[97m0-4\e[31m]: \e[0m"
