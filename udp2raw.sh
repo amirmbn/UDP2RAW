@@ -1,3 +1,6 @@
+#!/bin/bash
+
+# Color definitions
 CYAN="\e[96m"
 GREEN="\e[92m"
 YELLOW="\e[93m"
@@ -38,6 +41,7 @@ display_fancy_progress() {
     echo
 }
 
+# Check if running as root
 if [ "$EUID" -ne 0 ]; then
     echo -e "\n ${RED}This script must be run as root.${NC}"
     exit 1
@@ -63,42 +67,83 @@ install() {
     echo ""
     system_architecture=$(uname -m)
 
-if [ "$system_architecture" != "x86_64" ] && [ "$system_architecture" != "amd64" ]; then
-    echo "Unsupported architecture: $system_architecture"
-    exit 1
-fi
+    if [ "$system_architecture" != "x86_64" ] && [ "$system_architecture" != "amd64" ]; then
+        echo -e "${RED}Unsupported architecture: $system_architecture${NC}"
+        exit 1
+    fi
 
-sleep 1
+    sleep 1
     echo ""
     echo -e "${YELLOW}Downloading and installing udp2raw for architecture: $system_architecture${NC}"
-curl -L -o udp2raw_amd64 https://github.com/amirmbn/UDP2RAW/raw/main/Core/udp2raw_amd64
-curl -L -o udp2raw_x86 https://github.com/amirmbn/UDP2RAW/raw/main/Core/udp2raw_x86
-sleep 1
+    
+    # Download binaries with error handling
+    if ! curl -L -o udp2raw_amd64 https://github.com/amirmbn/UDP2RAW/raw/main/Core/udp2raw_amd64; then
+        echo -e "${RED}Failed to download udp2raw_amd64. Please check your internet connection.${NC}"
+        return 1
+    fi
+    
+    if ! curl -L -o udp2raw_x86 https://github.com/amirmbn/UDP2RAW/raw/main/Core/udp2raw_x86; then
+        echo -e "${RED}Failed to download udp2raw_x86. Please check your internet connection.${NC}"
+        return 1
+    fi
+    
+    sleep 1
 
-chmod +x udp2raw_amd64
-chmod +x udp2raw_x86
+    chmod +x udp2raw_amd64
+    chmod +x udp2raw_x86
 
-echo ""
-echo -e "${GREEN}Enabling IP forwarding...${NC}"
-display_fancy_progress 20
-echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
-echo "net.ipv6.conf.all.forwarding = 1" >> /etc/sysctl.conf
-sysctl -p > /dev/null 2>&1
-ufw reload > /dev/null 2>&1
-echo ""
-echo -e "${GREEN}All packages were installed and configured.${NC}"
+    echo ""
+    echo -e "${GREEN}Enabling IP forwarding...${NC}"
+    display_fancy_progress 20
+    
+    # Check if forwarding is already enabled to avoid duplicate entries
+    if ! grep -q "net.ipv4.ip_forward = 1" /etc/sysctl.conf; then
+        echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+    fi
+    
+    if ! grep -q "net.ipv6.conf.all.forwarding = 1" /etc/sysctl.conf; then
+        echo "net.ipv6.conf.all.forwarding = 1" >> /etc/sysctl.conf
+    fi
+    
+    sysctl -p > /dev/null 2>&1
+    
+    # Only reload ufw if it's installed and active
+    if command -v ufw &> /dev/null && ufw status | grep -q "active"; then
+        ufw reload > /dev/null 2>&1
+    fi
+    
+    echo ""
+    echo -e "${GREEN}All packages were installed and configured.${NC}"
+    return 0
 }
 
 validate_port() {
     local port="$1"
-    local exclude_ports=()
-    local wireguard_port=$(awk -F'=' '/ListenPort/ {gsub(/ /,"",$2); print $2}' /etc/wireguard/*.conf)
-    exclude_ports+=("$wireguard_port")
-
-    if [[ " ${exclude_ports[@]} " =~ " $port " ]]; then
-        return 0  
+    
+    # Check if port is a valid number
+    if ! [[ "$port" =~ ^[0-9]+$ ]]; then
+        echo -e "${RED}Port must be a number.${NC}"
+        return 1
+    fi
+    
+    # Check if port is in valid range
+    if [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
+        echo -e "${RED}Port must be between 1-65535.${NC}"
+        return 1
+    fi
+    
+    # Check if port is used by WireGuard
+    local wireguard_port=""
+    if [ -d "/etc/wireguard" ]; then
+        wireguard_port=$(awk -F'=' '/ListenPort/ {gsub(/ /,"",$2); print $2}' /etc/wireguard/*.conf 2>/dev/null)
+        
+        if [ "$port" -eq "$wireguard_port" ]; then
+            echo -e "${RED}Port $port is already used by WireGuard. Please choose another port.${NC}"
+            return 1
+        fi
     fi
 
+    # Check if port is in use
     if ss -tuln | grep -q ":$port "; then
         echo -e "${RED}Port $port is already in use. Please choose another port.${NC}"
         return 1
@@ -106,6 +151,7 @@ validate_port() {
 
     return 0
 }
+
 remote_func() {
     clear
     echo ""
@@ -125,7 +171,10 @@ remote_func() {
             tunnel_mode="0.0.0.0"
             ;;
         *)
-            echo -e "${RED}Invalid choice, choose correctly ...${NC}"
+            echo -e "${RED}Invalid choice, choose correctly (1 or 2)...${NC}"
+            press_enter
+            remote_func
+            return
             ;;
     esac
 
@@ -155,10 +204,18 @@ remote_func() {
     done
 
     echo ""
-    echo -ne "\e[33mEnter the Password for UDP2RAW \e[92m[This will be used on your local server (IR)]${NC}: "
-    read password
+    while true; do
+        echo -ne "\e[33mEnter the Password for UDP2RAW \e[92m[This will be used on your local server (IR)]${NC}: "
+        read password
+        if [ -z "$password" ]; then
+            echo -e "${RED}Password cannot be empty. Please enter a password.${NC}"
+        else
+            break
+        fi
+    done
+    
     echo ""
-    echo -e "\e[33m protocol (Mode) (Local and remote should be the same)${NC}"
+    echo -e "\e[33mProtocol (Mode) (Local and remote should be the same)${NC}"
     echo ""
     echo -e "${RED}1${NC}. ${YELLOW}udp${NC}"
     echo -e "${RED}2${NC}. ${YELLOW}faketcp${NC}"
@@ -178,20 +235,23 @@ remote_func() {
             raw_mode="icmp"
             ;;
         *)
-            echo -e "${RED}Invalid choice, choose correctly ...${NC}"
+            echo -e "${RED}Invalid choice, choose correctly (1-3)...${NC}"
+            press_enter
+            remote_func
+            return
             ;;
     esac
 
     echo -e "${CYAN}Selected protocol: ${GREEN}$raw_mode${NC}"
 
-cat << EOF > /etc/systemd/system/udp2raw-s.service
+    # Create service file
+    cat << EOF > /etc/systemd/system/udp2raw-s.service
 [Unit]
 Description=udp2raw-s Service
 After=network.target
 
 [Service]
 ExecStart=/root/udp2raw_amd64 -s -l $tunnel_mode:${local_port} -r 127.0.0.1:${remote_port} -k "${password}" --raw-mode ${raw_mode} -a
-
 Restart=always
 
 [Install]
@@ -200,18 +260,23 @@ EOF
 
     sleep 1
     systemctl daemon-reload
-    systemctl restart "udp2raw-s.service"
-    systemctl enable --now "udp2raw-s.service"
-    systemctl start --now "udp2raw-s.service"
+    
+    # Start and enable service with error handling
+    if ! systemctl restart "udp2raw-s.service"; then
+        echo -e "${RED}Failed to start udp2raw-s service. Check the logs with: journalctl -u udp2raw-s.service${NC}"
+        return 1
+    fi
+    
+    if ! systemctl enable --now "udp2raw-s.service"; then
+        echo -e "${RED}Failed to enable udp2raw-s service.${NC}"
+        return 1
+    fi
+    
     sleep 1
 
     echo -e "\e[92mRemote Server (EU) configuration has been adjusted and service started. Yours truly${NC}"
-echo ""
-GREEN='\033[0;92m'
-RED='\033[0;91m'
-NC='\033[0m'
-
-echo -e "${GREEN}Make sure to allow port ${RED}$remote_port${GREEN} on your firewall by this command:${RED} ufw allow $remote_port ${NC}"
+    echo ""
+    echo -e "${GREEN}Make sure to allow port ${RED}$remote_port${GREEN} on your firewall by this command:${RED} ufw allow $remote_port ${NC}"
 }
 
 local_func() {
@@ -233,9 +298,13 @@ local_func() {
             tunnel_mode="IPV4"
             ;;
         *)
-            echo -e "${RED}Invalid choice, choose correctly ...${NC}"
+            echo -e "${RED}Invalid choice, choose correctly (1 or 2)...${NC}"
+            press_enter
+            local_func
+            return
             ;;
     esac
+    
     while true; do
         echo -ne "\e[33mEnter the Local server (IR) port \e[92m[Default: 443]${NC}: "
         read remote_port
@@ -260,14 +329,31 @@ local_func() {
             break
         fi
     done
+    
     echo ""
-    echo -ne "\e[33mEnter the Remote server (EU) IPV6 / IPV4 (Based on your tunnel preference)\e[92m${NC}: "
-    read remote_address
+    while true; do
+        echo -ne "\e[33mEnter the Remote server (EU) IPV6 / IPV4 (Based on your tunnel preference)\e[92m${NC}: "
+        read remote_address
+        if [ -z "$remote_address" ]; then
+            echo -e "${RED}Remote address cannot be empty.${NC}"
+        else
+            break
+        fi
+    done
+    
     echo ""
-    echo -ne "\e[33mEnter the Password for UDP2RAW \e[92m[The same as you set on remote server (EU)]${NC}: "
-    read password
+    while true; do
+        echo -ne "\e[33mEnter the Password for UDP2RAW \e[92m[The same as you set on remote server (EU)]${NC}: "
+        read password
+        if [ -z "$password" ]; then
+            echo -e "${RED}Password cannot be empty. Please enter a password.${NC}"
+        else
+            break
+        fi
+    done
+    
     echo ""
-    echo -e "\e[33m protocol (Mode) \e[92m(Local and Remote shoud have the same value)${NC}"
+    echo -e "\e[33mProtocol (Mode) \e[92m(Local and Remote should have the same value)${NC}"
     echo ""
     echo -e "${RED}1${NC}. ${YELLOW}udp${NC}"
     echo -e "${RED}2${NC}. ${YELLOW}faketcp${NC}"
@@ -287,19 +373,24 @@ local_func() {
             raw_mode="icmp"
             ;;
         *)
-            echo -e "${RED}Invalid choice, choose correctly ...${NC}"
+            echo -e "${RED}Invalid choice, choose correctly (1-3)...${NC}"
+            press_enter
+            local_func
+            return
             ;;
     esac
 
-echo -e "${CYAN}Selected protocol: ${GREEN}$raw_mode${NC}"
+    echo -e "${CYAN}Selected protocol: ${GREEN}$raw_mode${NC}"
 
-if [ "$tunnel_mode" == "IPV4" ]; then
-    exec_start="/root/udp2raw_amd64 -c -l 0.0.0.0:${local_port} -r ${remote_address}:${remote_port} -k ${password} --raw-mode ${raw_mode} -a"
-else
-    exec_start="/root/udp2raw_amd64 -c -l [::]:${local_port} -r [${remote_address}]:${remote_port} -k ${password} --raw-mode ${raw_mode} -a"
-fi
+    # Set the ExecStart command based on tunnel mode
+    if [ "$tunnel_mode" == "IPV4" ]; then
+        exec_start="/root/udp2raw_amd64 -c -l 0.0.0.0:${local_port} -r ${remote_address}:${remote_port} -k ${password} --raw-mode ${raw_mode} -a"
+    else
+        exec_start="/root/udp2raw_amd64 -c -l [::]:${local_port} -r [${remote_address}]:${remote_port} -k ${password} --raw-mode ${raw_mode} -a"
+    fi
 
-cat << EOF > /etc/systemd/system/udp2raw-c.service
+    # Create service file
+    cat << EOF > /etc/systemd/system/udp2raw-c.service
 [Unit]
 Description=udp2raw-c Service
 After=network.target
@@ -312,19 +403,23 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-sleep 1
-systemctl daemon-reload
-systemctl restart "udp2raw-c.service"
-systemctl enable --now "udp2raw-c.service"
-systemctl start --now "udp2raw-c.service"
+    sleep 1
+    systemctl daemon-reload
+    
+    # Start and enable service with error handling
+    if ! systemctl restart "udp2raw-c.service"; then
+        echo -e "${RED}Failed to start udp2raw-c service. Check the logs with: journalctl -u udp2raw-c.service${NC}"
+        return 1
+    fi
+    
+    if ! systemctl enable --now "udp2raw-c.service"; then
+        echo -e "${RED}Failed to enable udp2raw-c service.${NC}"
+        return 1
+    fi
 
-echo -e "\e[92mLocal Server (IR) configuration has been adjusted and service started. Yours truly${NC}"
-echo ""
-GREEN='\033[0;92m'
-RED='\033[0;91m'
-NC='\033[0m'
-
-echo -e "${GREEN}Make sure to allow port ${RED}$remote_port${GREEN} on your firewall by this command:${RED} ufw allow $remote_port ${NC}"
+    echo -e "\e[92mLocal Server (IR) configuration has been adjusted and service started. Yours truly${NC}"
+    echo ""
+    echo -e "${GREEN}Make sure to allow port ${RED}$remote_port${GREEN} on your firewall by this command:${RED} ufw allow $remote_port ${NC}"
 }
 
 uninstall() {
@@ -335,13 +430,20 @@ uninstall() {
     echo ""
     display_fancy_progress 20
 
-    systemctl stop --now "udp2raw-s.service" > /dev/null 2>&1
-    systemctl disable --now "udp2raw-s.service" > /dev/null 2>&1
-    systemctl stop --now "udp2raw-c.service" > /dev/null 2>&1
-    systemctl disable --now "udp2raw-c.service" > /dev/null 2>&1
+    # Stop and disable services
+    systemctl stop "udp2raw-s.service" > /dev/null 2>&1
+    systemctl disable "udp2raw-s.service" > /dev/null 2>&1
+    systemctl stop "udp2raw-c.service" > /dev/null 2>&1
+    systemctl disable "udp2raw-c.service" > /dev/null 2>&1
+    
+    # Remove service files and binaries
     rm -f /etc/systemd/system/udp2raw-s.service > /dev/null 2>&1
     rm -f /etc/systemd/system/udp2raw-c.service > /dev/null 2>&1
-    rm -f /usr/local/bin/udp2raw > /dev/null 2>&1
+    rm -f /root/udp2raw_amd64 > /dev/null 2>&1
+    rm -f /root/udp2raw_x86 > /dev/null 2>&1
+    
+    # Reload systemd
+    systemctl daemon-reload > /dev/null 2>&1
     
     sleep 2
     echo ""
@@ -356,23 +458,21 @@ menu_status() {
     systemctl is-active "udp2raw-c.service" &> /dev/null
     local_status=$?
 
-GREEN='\033[0;92m'
-RED='\033[0;91;1m'
-CYAN='\033[0;96m'
-NC='\033[0m'
-echo ""
-if [ $remote_status -eq 0 ]; then
-    echo -e "\e[36m ${CYAN}EU Server Status${NC} > ${GREEN}Wireguard Tunnel is running.${NC}"
-else
-    echo -e "\e[36m ${CYAN}EU Server Status${NC} > ${RED}Wireguard Tunnel is not running.${NC}"
-fi
-echo ""
-if [ $local_status -eq 0 ]; then
-    echo -e "\e[36m ${CYAN}IR Server Status${NC} > ${GREEN}Wireguard Tunnel is running.${NC}"
-else
-    echo -e "\e[36m ${CYAN}IR Server Status${NC} > ${RED}Wireguard Tunnel is not running.${NC}"
-fi
+    echo ""
+    if [ $remote_status -eq 0 ]; then
+        echo -e "\e[36m ${CYAN}EU Server Status${NC} > ${GREEN}Wireguard Tunnel is running.${NC}"
+    else
+        echo -e "\e[36m ${CYAN}EU Server Status${NC} > ${RED}Wireguard Tunnel is not running.${NC}"
+    fi
+    echo ""
+    if [ $local_status -eq 0 ]; then
+        echo -e "\e[36m ${CYAN}IR Server Status${NC} > ${GREEN}Wireguard Tunnel is running.${NC}"
+    else
+        echo -e "\e[36m ${CYAN}IR Server Status${NC} > ${RED}Wireguard Tunnel is not running.${NC}"
+    fi
 }
+
+# Main menu loop
 echo ""
 while true; do
     clear    
@@ -391,7 +491,6 @@ while true; do
     read choice
 
     case $choice in
-        
         1)
             install
             ;;
@@ -413,6 +512,5 @@ while true; do
             ;;
     esac
 
-    echo -e "\n ${RED}Press Enter to continue... ${NC}"
-    read
+    press_enter
 done
