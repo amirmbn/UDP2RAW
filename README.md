@@ -23,7 +23,5 @@ bash <(curl -Ls https://raw.githubusercontent.com/amirmbn/UDP2RAW/main/udp2raw.s
 
 
  - بعد از اجرا اسکریپت ابتدا گزینه 1 (Install UDP2RAW binary) را انتخاب کنید
-
  - گزینه 2 مربوط به تنظیمات تانل سرور خارج
-
  - گزینه 3 مربوط به تنظیمات تانل سرور ایران میباشد.
