@@ -1,6 +1,3 @@
-#!/bin/bash
-
-# Color definitions
 CYAN="\e[96m"
 GREEN="\e[92m"
 YELLOW="\e[93m"
