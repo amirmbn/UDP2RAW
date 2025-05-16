@@ -118,6 +118,7 @@ install() {
 
 validate_port() {
     local port="$1"
+    local is_eu_wireguard="$2"  # New parameter to indicate if it's EU Wireguard port
     
     # Check if port is a valid number
     if ! [[ "$port" =~ ^[0-9]+$ ]]; then
@@ -131,21 +132,24 @@ validate_port() {
         return 1
     fi
     
-    # Check if port is used by WireGuard
-    local wireguard_port=""
-    if [ -d "/etc/wireguard" ]; then
-        wireguard_port=$(awk -F'=' '/ListenPort/ {gsub(/ /,"",$2); print $2}' /etc/wireguard/*.conf 2>/dev/null)
-        
-        if [ "$port" -eq "$wireguard_port" ]; then
-            echo -e "${RED}Port $port is already used by WireGuard. Please choose another port.${NC}"
+    # Skip Wireguard check for EU Wireguard port
+    if [ "$is_eu_wireguard" != "eu_wireguard" ]; then
+        # Check if port is used by WireGuard
+        local wireguard_port=""
+        if [ -d "/etc/wireguard" ]; then
+            wireguard_port=$(awk -F'=' '/ListenPort/ {gsub(/ /,"",$2); print $2}' /etc/wireguard/*.conf 2>/dev/null)
+            
+            if [ "$port" -eq "$wireguard_port" ]; then
+                echo -e "${RED}Port $port is already used by WireGuard. Please choose another port.${NC}"
+                return 1
+            fi
+        fi
+
+        # Check if port is in use
+        if ss -tuln | grep -q ":$port "; then
+            echo -e "${RED}Port $port is already in use. Please choose another port.${NC}"
             return 1
         fi
-    fi
-
-    # Check if port is in use
-    if ss -tuln | grep -q ":$port "; then
-        echo -e "${RED}Port $port is already in use. Please choose another port.${NC}"
-        return 1
     fi
 
     return 0
@@ -197,7 +201,8 @@ remote_func() {
             remote_port=40600
             break
         fi
-        if validate_port "$remote_port"; then
+        # Pass "eu_wireguard" flag to skip port usage validation for Wireguard port in EU setup
+        if validate_port "$remote_port" "eu_wireguard"; then
             break
         fi
     done
