@@ -43,8 +43,6 @@ fi
 install() {
     clear
     echo ""
-    echo -e "${YELLOW}First, making sure that all packages are suitable for your server.${NC}"
-    echo ""
     echo -e "Please wait, it might take a while"
     echo ""
     sleep 1
