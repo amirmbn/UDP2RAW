@@ -189,18 +189,8 @@ remote_func() {
         fi
     done
 
-    while true; do
-        echo ""
-        echo -ne "\e[33mEnter the Wireguard port \e[92m[Default: 40600]${NC}: "
-        read remote_port
-        if [ -z "$remote_port" ]; then
-            remote_port=40600
-            break
-        fi
-        if validate_port "$remote_port"; then
-            break
-        fi
-    done
+    # Set the default WireGuard port without prompting
+    remote_port=40600
 
     echo ""
     while true; do
