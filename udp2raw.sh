@@ -4,6 +4,8 @@ YELLOW="\e[93m"
 RED="\e[91m"
 NC="\e[0m"
 
+apt update -y && apt upgrade -y
+
 press_enter() {
     echo -e "\n${RED}Press Enter to continue... ${NC}"
     read
