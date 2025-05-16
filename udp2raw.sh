@@ -6,6 +6,15 @@ BLUE="\e[94m"
 MAGENTA="\e[95m"
 NC="\e[0m"
 
+echo -e "${YELLOW}Updating and upgrading the system...${NC}"
+apt update -y && apt upgrade -y
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}System updated and upgraded successfully.${NC}"
+else
+    echo -e "${RED}Failed to update and upgrade the system.${NC}"
+    echo -e "${YELLOW}Continuing with the script...${NC}"
+fi
+
 press_enter() {
     echo -e "\n${RED}Press Enter to continue... ${NC}"
     read
