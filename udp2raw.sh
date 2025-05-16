@@ -151,17 +151,9 @@ remote_func() {
     read tunnel_mode
 
     case $tunnel_mode in
-        1)
-            tunnel_mode="[::]"
-            ;;
-        2)
-            tunnel_mode="0.0.0.0"
-            ;;
-        *)
-            echo -e "${RED}Invalid choice, choose correctly (1 or 2)...${NC}"
-            remote_func
-            return
-            ;;
+        1) tunnel_mode="[::]";;
+        2) tunnel_mode="0.0.0.0";;
+        *) echo -e "${RED}Invalid choice, choose correctly (1 or 2)...${NC}" remote_func return;;
     esac
 
     while true; do
@@ -211,20 +203,10 @@ remote_func() {
     read protocol_choice
 
     case $protocol_choice in
-        1)
-            raw_mode="udp"
-            ;;
-        2)
-            raw_mode="faketcp"
-            ;;
-        3)
-            raw_mode="icmp"
-            ;;
-        *)
-            echo -e "${RED}Invalid choice, choose correctly (1-3)...${NC}"
-            remote_func
-            return
-            ;;
+        1) raw_mode="udp";;
+        2) raw_mode="faketcp";;
+        3) raw_mode="icmp";;
+        *) echo -e "${RED}Invalid choice, choose correctly (1-3)...${NC}" remote_func return;;
     esac
 
     echo -e "${CYAN}Selected protocol: ${GREEN}$raw_mode${NC}"
@@ -274,17 +256,9 @@ local_func() {
     read tunnel_mode
 
     case $tunnel_mode in
-        1)
-            tunnel_mode="IPV6"
-            ;;
-        2)
-            tunnel_mode="IPV4"
-            ;;
-        *)
-            echo -e "${RED}Invalid choice, choose correctly (1 or 2)...${NC}"
-            local_func
-            return
-            ;;
+        1) tunnel_mode="IPV6";;
+        2) tunnel_mode="IPV4";;
+        *) echo -e "${RED}Invalid choice, choose correctly (1 or 2)...${NC}" local_func return;;
     esac
     
     while true; do
@@ -345,20 +319,10 @@ local_func() {
     read protocol_choice
 
     case $protocol_choice in
-        1)
-            raw_mode="udp"
-            ;;
-        2)
-            raw_mode="faketcp"
-            ;;
-        3)
-            raw_mode="icmp"
-            ;;
-        *)
-            echo -e "${RED}Invalid choice, choose correctly (1-3)...${NC}"
-            local_func
-            return
-            ;;
+        1) raw_mode="udp";;
+        2) raw_mode="faketcp";;
+        3) raw_mode="icmp";;
+        *) echo -e "${RED}Invalid choice, choose correctly (1-3)...${NC}" local_func return;;
     esac
 
     echo -e "${CYAN}Selected protocol: ${GREEN}$raw_mode${NC}"
@@ -465,24 +429,11 @@ while true; do
     read choice
 
     case $choice in
-        1)
-            install
-            ;;
-        2)
-            remote_func
-            ;;
-        3)
-            local_func
-            ;;
-        4)
-            uninstall
-            ;;
-        0)
-            echo -e "\n ${RED}Exiting...${NC}"
-            exit 0
-            ;;
-        *)
-            echo -e "\n ${RED}Invalid choice. Please enter a valid option.${NC}"
-            ;;
+        1) install;;
+        2) remote_func;;
+        3) local_func;;
+        4) uninstall;;
+        0) echo -e "\n ${RED}Exiting...${NC}" exit 0;;
+        *) echo -e "\n ${RED}Invalid choice. Please enter a valid option.${NC}";;
     esac
 done
