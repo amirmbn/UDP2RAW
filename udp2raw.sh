@@ -8,11 +8,6 @@ NC="\e[0m"
 
 apt update -y && apt upgrade -y
 
-press_enter() {
-    echo -e "\n${RED}Press Enter to continue... ${NC}"
-    read
-}
-
 display_fancy_progress() {
     local duration=$1
     local sleep_interval=0.1
@@ -40,7 +35,6 @@ display_fancy_progress() {
     echo
 }
 
-# Check if running as root
 if [ "$EUID" -ne 0 ]; then
     echo -e "\n ${RED}This script must be run as root.${NC}"
     exit 1
@@ -75,7 +69,6 @@ install() {
     echo ""
     echo -e "${YELLOW}Downloading and installing udp2raw for architecture: $system_architecture${NC}"
     
-    # Download binaries with error handling
     if ! curl -L -o udp2raw_amd64 https://github.com/amirmbn/UDP2RAW/raw/main/Core/udp2raw_amd64; then
         echo -e "${RED}Failed to download udp2raw_amd64. Please check your internet connection.${NC}"
         return 1
@@ -95,7 +88,6 @@ install() {
     echo -e "${GREEN}Enabling IP forwarding...${NC}"
     display_fancy_progress 20
     
-    # Check if forwarding is already enabled to avoid duplicate entries
     if ! grep -q "net.ipv4.ip_forward = 1" /etc/sysctl.conf; then
         echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
     fi
@@ -106,7 +98,6 @@ install() {
     
     sysctl -p > /dev/null 2>&1
     
-    # Only reload ufw if it's installed and active
     if command -v ufw &> /dev/null && ufw status | grep -q "active"; then
         ufw reload > /dev/null 2>&1
     fi
@@ -118,34 +109,33 @@ install() {
 
 validate_port() {
     local port="$1"
+    local is_eu_wireguard="$2"
     
-    # Check if port is a valid number
     if ! [[ "$port" =~ ^[0-9]+$ ]]; then
         echo -e "${RED}Port must be a number.${NC}"
         return 1
     fi
     
-    # Check if port is in valid range
     if [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
         echo -e "${RED}Port must be between 1-65535.${NC}"
         return 1
     fi
     
-    # Check if port is used by WireGuard
-    local wireguard_port=""
-    if [ -d "/etc/wireguard" ]; then
-        wireguard_port=$(awk -F'=' '/ListenPort/ {gsub(/ /,"",$2); print $2}' /etc/wireguard/*.conf 2>/dev/null)
-        
-        if [ "$port" -eq "$wireguard_port" ]; then
-            echo -e "${RED}Port $port is already used by WireGuard. Please choose another port.${NC}"
+    if [ "$is_eu_wireguard" != "eu_wireguard" ]; then
+        local wireguard_port=""
+        if [ -d "/etc/wireguard" ]; then
+            wireguard_port=$(awk -F'=' '/ListenPort/ {gsub(/ /,"",$2); print $2}' /etc/wireguard/*.conf 2>/dev/null)
+            
+            if [ "$port" -eq "$wireguard_port" ]; then
+                echo -e "${RED}Port $port is already used by WireGuard. Please choose another port.${NC}"
+                return 1
+            fi
+        fi
+
+        if ss -tuln | grep -q ":$port "; then
+            echo -e "${RED}Port $port is already in use. Please choose another port.${NC}"
             return 1
         fi
-    fi
-
-    # Check if port is in use
-    if ss -tuln | grep -q ":$port "; then
-        echo -e "${RED}Port $port is already in use. Please choose another port.${NC}"
-        return 1
     fi
 
     return 0
@@ -171,7 +161,6 @@ remote_func() {
             ;;
         *)
             echo -e "${RED}Invalid choice, choose correctly (1 or 2)...${NC}"
-            press_enter
             remote_func
             return
             ;;
@@ -189,8 +178,18 @@ remote_func() {
         fi
     done
 
-    # Set the default WireGuard port without prompting
-    remote_port=40600
+    while true; do
+        echo ""
+        echo -ne "\e[33mEnter the Wireguard port \e[92m[Default: 40600]${NC}: "
+        read remote_port
+        if [ -z "$remote_port" ]; then
+            remote_port=40600
+            break
+        fi
+        if validate_port "$remote_port" "eu_wireguard"; then
+            break
+        fi
+    done
 
     echo ""
     while true; do
@@ -225,7 +224,6 @@ remote_func() {
             ;;
         *)
             echo -e "${RED}Invalid choice, choose correctly (1-3)...${NC}"
-            press_enter
             remote_func
             return
             ;;
@@ -233,7 +231,6 @@ remote_func() {
 
     echo -e "${CYAN}Selected protocol: ${GREEN}$raw_mode${NC}"
 
-    # Create service file
     cat << EOF > /etc/systemd/system/udp2raw-s.service
 [Unit]
 Description=udp2raw-s Service
@@ -250,7 +247,6 @@ EOF
     sleep 1
     systemctl daemon-reload
     
-    # Start and enable service with error handling
     if ! systemctl restart "udp2raw-s.service"; then
         echo -e "${RED}Failed to start udp2raw-s service. Check the logs with: journalctl -u udp2raw-s.service${NC}"
         return 1
@@ -288,7 +284,6 @@ local_func() {
             ;;
         *)
             echo -e "${RED}Invalid choice, choose correctly (1 or 2)...${NC}"
-            press_enter
             local_func
             return
             ;;
@@ -363,7 +358,6 @@ local_func() {
             ;;
         *)
             echo -e "${RED}Invalid choice, choose correctly (1-3)...${NC}"
-            press_enter
             local_func
             return
             ;;
@@ -371,14 +365,12 @@ local_func() {
 
     echo -e "${CYAN}Selected protocol: ${GREEN}$raw_mode${NC}"
 
-    # Set the ExecStart command based on tunnel mode
     if [ "$tunnel_mode" == "IPV4" ]; then
         exec_start="/root/udp2raw_amd64 -c -l 0.0.0.0:${local_port} -r ${remote_address}:${remote_port} -k ${password} --raw-mode ${raw_mode} -a"
     else
         exec_start="/root/udp2raw_amd64 -c -l [::]:${local_port} -r [${remote_address}]:${remote_port} -k ${password} --raw-mode ${raw_mode} -a"
     fi
 
-    # Create service file
     cat << EOF > /etc/systemd/system/udp2raw-c.service
 [Unit]
 Description=udp2raw-c Service
@@ -395,7 +387,6 @@ EOF
     sleep 1
     systemctl daemon-reload
     
-    # Start and enable service with error handling
     if ! systemctl restart "udp2raw-c.service"; then
         echo -e "${RED}Failed to start udp2raw-c service. Check the logs with: journalctl -u udp2raw-c.service${NC}"
         return 1
@@ -419,19 +410,16 @@ uninstall() {
     echo ""
     display_fancy_progress 20
 
-    # Stop and disable services
     systemctl stop "udp2raw-s.service" > /dev/null 2>&1
     systemctl disable "udp2raw-s.service" > /dev/null 2>&1
     systemctl stop "udp2raw-c.service" > /dev/null 2>&1
     systemctl disable "udp2raw-c.service" > /dev/null 2>&1
     
-    # Remove service files and binaries
     rm -f /etc/systemd/system/udp2raw-s.service > /dev/null 2>&1
     rm -f /etc/systemd/system/udp2raw-c.service > /dev/null 2>&1
     rm -f /root/udp2raw_amd64 > /dev/null 2>&1
     rm -f /root/udp2raw_x86 > /dev/null 2>&1
     
-    # Reload systemd
     systemctl daemon-reload > /dev/null 2>&1
     
     sleep 2
@@ -461,7 +449,6 @@ menu_status() {
     fi
 }
 
-# Main menu loop
 echo ""
 while true; do
     clear    
@@ -500,6 +487,4 @@ while true; do
             echo -e "\n ${RED}Invalid choice. Please enter a valid option.${NC}"
             ;;
     esac
-
-    press_enter
 done
