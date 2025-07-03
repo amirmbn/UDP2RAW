@@ -432,7 +432,7 @@ while true; do
         2) remote_func;;
         3) local_func;;
         4) uninstall;;
-        0) echo -e "\n${RED}Exiting...${NC} \n"
+        0) echo -e "\n${RED}Exiting...${NC}\n"
             exit 0;;
         *) echo -e "\n ${RED}Invalid choice. Please enter a valid option.${NC}";;
     esac
