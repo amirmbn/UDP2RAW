@@ -145,15 +145,15 @@ remote_func() {
     echo ""
     echo -e "\e[33mSelect EU Tunnel Mode${NC}"
     echo ""
-    echo -e "${RED}1${NC}. ${YELLOW}IPV6${NC}"
-    echo -e "${RED}2${NC}. ${YELLOW}IPV4${NC}"
+    echo -e "${RED}1${NC}. ${YELLOW}IPV4${NC}"
+    echo -e "${RED}2${NC}. ${YELLOW}IPV6${NC}"
     echo ""
     echo -ne "Enter your choice [1-2] : ${NC}"
     read tunnel_mode
 
     case $tunnel_mode in
-        1) tunnel_mode="[::]";;
-        2) tunnel_mode="0.0.0.0";;
+        1) tunnel_mode="0.0.0.0";;
+        2) tunnel_mode="[::]";;
         *) echo -e "${RED}Invalid choice, choose correctly (1 or 2)...${NC}"
             press_enter
             remote_func
@@ -257,15 +257,15 @@ local_func() {
     echo ""
     echo -e "\e[33mSelect IR Tunnel Mode${NC}"
     echo ""
-    echo -e "${RED}1${NC}. ${YELLOW}IPV6${NC}"
-    echo -e "${RED}2${NC}. ${YELLOW}IPV4${NC}"
+    echo -e "${RED}1${NC}. ${YELLOW}IPV4${NC}"
+    echo -e "${RED}2${NC}. ${YELLOW}IPV6${NC}"
     echo ""
     echo -ne "Enter your choice [1-2] : ${NC}"
     read tunnel_mode
 
     case $tunnel_mode in
-        1) tunnel_mode="IPV6";;
-        2) tunnel_mode="IPV4";;
+        1) tunnel_mode="IPV4";;
+        2) tunnel_mode="IPV6";;
         *) echo -e "${RED}Invalid choice, choose correctly (1 or 2)...${NC}"
             press_enter
             local_func
