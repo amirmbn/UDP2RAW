@@ -43,6 +43,14 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+ensure_installed() {
+    if [ ! -x /root/udp2raw ]; then
+        echo -e "${YELLOW}udp2raw binary not found, installing automatically...${NC}"
+        sleep 1
+        install
+    fi
+}
+
 install() {
     clear
     echo ""
@@ -132,6 +140,7 @@ validate_port() {
 }
 
 remote_func() {
+    ensure_installed
     clear
     echo ""
     echo -e "\e[33mSelect EU Tunnel Mode${NC}"
@@ -243,6 +252,7 @@ EOF
 }
 
 local_func() {
+    ensure_installed
     clear
     echo ""
     echo -e "\e[33mSelect IR Tunnel Mode${NC}"
@@ -415,15 +425,16 @@ menu_status() {
 }
 
 echo ""
+ensure_installed
 while true; do
     clear    
     menu_status
     echo ""
     echo ""
-    echo -e "\e[36m 1\e[0m) \e[93mInstall UDP2RAW binary"
-    echo -e "\e[36m 2\e[0m) \e[93mSet EU Tunnel"
-    echo -e "\e[36m 3\e[0m) \e[93mSet IR Tunnel"  
+    echo -e "\e[36m 1\e[0m) \e[93mSet EU Tunnel"
+    echo -e "\e[36m 2\e[0m) \e[93mSet IR Tunnel"  
     echo ""
+    echo -e "\e[36m 3\e[0m) \e[93mReinstall / Update UDP2RAW binary"
     echo -e "\e[36m 4\e[0m) \e[93mUninstall UDP2RAW"
     echo -e "\e[36m 0\e[0m) \e[93mExit"
     echo ""
@@ -432,9 +443,9 @@ while true; do
     read choice
 
     case $choice in
-        1) install;;
-        2) remote_func;;
-        3) local_func;;
+        1) remote_func;;
+        2) local_func;;
+        3) install;;
         4) uninstall;;
         0) echo -e "\n${RED}Exiting...${NC}\n"
             exit 0;;
