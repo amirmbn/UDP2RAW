@@ -72,12 +72,12 @@ install() {
     echo ""
     echo -e "${YELLOW}Downloading and installing udp2raw for architecture: $system_architecture${NC}"
     
-    if ! curl -L -o udp2raw_amd64 https://github.com/amirmbn/UDP2RAW/raw/main/Core/udp2raw_amd64; then
+    if ! curl -L -o udp2raw_amd64 https://github.com/amirmbn/UDP2RAW/releases/download/1/udp2raw_amd64; then
         echo -e "${RED}Failed to download udp2raw_amd64. Please check your internet connection.${NC}"
         return 1
     fi
     
-    if ! curl -L -o udp2raw_x86 https://github.com/amirmbn/UDP2RAW/raw/main/Core/udp2raw_x86; then
+    if ! curl -L -o udp2raw_x86 https://github.com/amirmbn/UDP2RAW/releases/download/1/udp2raw_x86; then
         echo -e "${RED}Failed to download udp2raw_x86. Please check your internet connection.${NC}"
         return 1
     fi
