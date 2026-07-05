@@ -58,16 +58,7 @@ install() {
     echo ""
     echo -e "Please wait, it might take a while"
     echo ""
-    sleep 1
-    secs=4
-    while [ $secs -gt 0 ]; do
-        echo -ne "Continuing in $secs seconds\033[0K\r"
-        sleep 1
-        : $((secs--))
-    done
-    echo ""
     apt-get update > /dev/null 2>&1
-    display_fancy_progress 20
     echo ""
     system_architecture=$(uname -m)
 
@@ -102,7 +93,6 @@ install() {
 
     echo ""
     echo -e "${GREEN}Enabling IP forwarding...${NC}"
-    display_fancy_progress 20
     
     if ! grep -q "net.ipv4.ip_forward = 1" /etc/sysctl.conf; then
         echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
@@ -434,19 +424,17 @@ while true; do
     echo -e "\e[36m 1\e[0m) \e[93mSet EU Tunnel"
     echo -e "\e[36m 2\e[0m) \e[93mSet IR Tunnel"  
     echo ""
-    echo -e "\e[36m 3\e[0m) \e[93mReinstall / Update UDP2RAW binary"
-    echo -e "\e[36m 4\e[0m) \e[93mUninstall UDP2RAW"
+    echo -e "\e[36m 3\e[0m) \e[93mUninstall UDP2RAW"
     echo -e "\e[36m 0\e[0m) \e[93mExit"
     echo ""
     echo ""
-    echo -ne "\e[92mSelect an option \e[31m[\e[97m0-4\e[31m]: \e[0m"
+    echo -ne "\e[92mSelect an option \e[31m[\e[97m0-3\e[31m]: \e[0m"
     read choice
 
     case $choice in
         1) remote_func;;
         2) local_func;;
-        3) install;;
-        4) uninstall;;
+        3) uninstall;;
         0) echo -e "\n${RED}Exiting...${NC}\n"
             exit 0;;
         *) echo -e "\n ${RED}Invalid choice. Please enter a valid option.${NC}";;
