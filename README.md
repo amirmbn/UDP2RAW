@@ -1,4 +1,4 @@
-# UDP Tunnel
+# UDP Tunnel ![GitHub Downloads](https://img.shields.io/github/downloads/amirmbn/UDP2RAW/total?style=flat-square)
 
 <div align="right">
 
