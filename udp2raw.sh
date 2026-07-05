@@ -63,29 +63,34 @@ install() {
     echo ""
     system_architecture=$(uname -m)
 
-    if [ "$system_architecture" != "x86_64" ] && [ "$system_architecture" != "amd64" ]; then
-        echo -e "${RED}Unsupported architecture: $system_architecture${NC}"
-        exit 1
-    fi
+    case "$system_architecture" in
+        x86_64|amd64)
+            binary_asset="udp2raw_amd64"
+            ;;
+        aarch64|arm64|armv7l|armv6l|arm)
+            binary_asset="udp2raw_arm"
+            ;;
+        i386|i686|x86)
+            binary_asset="udp2raw_x86"
+            ;;
+        *)
+            echo -e "${RED}Unsupported architecture: $system_architecture${NC}"
+            exit 1
+            ;;
+    esac
 
     sleep 1
     echo ""
-    echo -e "${YELLOW}Downloading and installing udp2raw for architecture: $system_architecture${NC}"
+    echo -e "${YELLOW}Downloading and installing udp2raw for architecture: $system_architecture (${binary_asset})${NC}"
     
-    if ! curl -L -o udp2raw_amd64 https://github.com/amirmbn/UDP2RAW/releases/download/1/udp2raw_amd64; then
-        echo -e "${RED}Failed to download udp2raw_amd64. Please check your internet connection.${NC}"
-        return 1
-    fi
-    
-    if ! curl -L -o udp2raw_x86 https://github.com/amirmbn/UDP2RAW/releases/download/1/udp2raw_x86; then
-        echo -e "${RED}Failed to download udp2raw_x86. Please check your internet connection.${NC}"
+    if ! curl -L -o /root/udp2raw "https://github.com/amirmbn/UDP2RAW/releases/download/1/${binary_asset}"; then
+        echo -e "${RED}Failed to download ${binary_asset}. Please check your internet connection.${NC}"
         return 1
     fi
     
     sleep 1
 
-    chmod +x udp2raw_amd64
-    chmod +x udp2raw_x86
+    chmod +x /root/udp2raw
 
     echo ""
     echo -e "${GREEN}Enabling IP forwarding...${NC}"
@@ -210,7 +215,7 @@ Description=udp2raw-s Service
 After=network.target
 
 [Service]
-ExecStart=/root/udp2raw_amd64 -s -l $tunnel_mode:${local_port} -r 127.0.0.1:${remote_port} -k "${password}" --raw-mode ${raw_mode} -a
+ExecStart=/root/udp2raw -s -l $tunnel_mode:${local_port} -r 127.0.0.1:${remote_port} -k "${password}" --raw-mode ${raw_mode} -a
 Restart=always
 
 [Install]
@@ -327,9 +332,9 @@ local_func() {
     echo -e "${CYAN}Selected protocol: ${GREEN}$raw_mode${NC}"
 
     if [ "$tunnel_mode" == "IPV4" ]; then
-        exec_start="/root/udp2raw_amd64 -c -l 0.0.0.0:${local_port} -r ${remote_address}:${remote_port} -k ${password} --raw-mode ${raw_mode} -a"
+        exec_start="/root/udp2raw -c -l 0.0.0.0:${local_port} -r ${remote_address}:${remote_port} -k ${password} --raw-mode ${raw_mode} -a"
     else
-        exec_start="/root/udp2raw_amd64 -c -l [::]:${local_port} -r [${remote_address}]:${remote_port} -k ${password} --raw-mode ${raw_mode} -a"
+        exec_start="/root/udp2raw -c -l [::]:${local_port} -r [${remote_address}]:${remote_port} -k ${password} --raw-mode ${raw_mode} -a"
     fi
 
     cat << EOF > /etc/systemd/system/udp2raw-c.service
@@ -378,8 +383,7 @@ uninstall() {
     
     rm -f /etc/systemd/system/udp2raw-s.service > /dev/null 2>&1
     rm -f /etc/systemd/system/udp2raw-c.service > /dev/null 2>&1
-    rm -f /root/udp2raw_amd64 > /dev/null 2>&1
-    rm -f /root/udp2raw_x86 > /dev/null 2>&1
+    rm -f /root/udp2raw > /dev/null 2>&1
     
     systemctl daemon-reload > /dev/null 2>&1
     
