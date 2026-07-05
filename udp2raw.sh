@@ -160,10 +160,10 @@ remote_func() {
 
     while true; do
         echo ""
-        echo -ne "\e[33mEnter the Wireguard port \e[92m[Default: 40600]${NC}: "
+        echo -ne "\e[33mEnter the Wireguard port \e[92m[Default: 1080]${NC}: "
         read remote_port
         if [ -z "$remote_port" ]; then
-            remote_port=40600
+            remote_port=1080
             break
         fi
         if validate_port "$remote_port"; then
@@ -271,10 +271,10 @@ local_func() {
 
     while true; do
         echo ""
-        echo -ne "\e[33mEnter the Wireguard port - installed on EU \e[92m[Default: 40600]${NC}: "
+        echo -ne "\e[33mEnter the Wireguard port - installed on EU \e[92m[Default: 1080]${NC}: "
         read local_port
         if [ -z "$local_port" ]; then
-            local_port=40600
+            local_port=1080
             break
         fi
         if validate_port "$local_port"; then
