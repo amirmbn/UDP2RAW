@@ -19,4 +19,4 @@ bash <(curl -Ls https://raw.githubusercontent.com/amirmbn/UDP2RAW/main/udp2raw.s
  - گزینه 3 هم برای حذف کامل قوانین و تانل است
 </div>
 
-![Login](./images/3.0.7/udp2raw.webp)
+![Login](./images/udp2raw.webp)
