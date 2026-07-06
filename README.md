@@ -17,9 +17,7 @@ bash <(curl -Ls https://raw.githubusercontent.com/amirmbn/UDP2RAW/main/udp2raw.s
  - شماره 1 مربوط به تنظیمات سرور خارج است
  - شماره 2 مربوط به تنظیمات سرور ایران است
  - گزینه 3 هم برای حذف کامل قوانین و تانل است
-
-
-
+<br><br>
 تونلی که ترافیک UDP را با استفاده از سوکت خام به ترافیک جعلی TCP/UDP/ICMP رمزگذاری شده تبدیل می‌کند، به شما کمک می‌کند تا از فایروال‌های UDP (یا محیط UDP ناپایدار) عبور کنید.
 </div>
 
@@ -28,9 +26,9 @@ bash <(curl -Ls https://raw.githubusercontent.com/amirmbn/UDP2RAW/main/udp2raw.s
 ![Login](./images/udp2raw.webp)
 
 <div align="right">
-
+<br><br>
 هنگامی که به تنهایی استفاده می‌شود، udp2raw فقط ترافیک UDP را تونل می‌کند. با این وجود، اگر از udp2raw + هر VPN مبتنی بر UDP با هم استفاده کنید، می‌توانید هر ترافیکی (شامل TCP/UDP/ICMP) را تونل کنید، در حال حاضر OpenVPN/L2TP/ShadowVPN و tinyfecVPN پشتیبانی می‌شوند.
-
+<br><br>
 </div>
 
 ![Login](./images/udp2rawopenvpn.webp)
