@@ -26,4 +26,10 @@ bash <(curl -Ls https://raw.githubusercontent.com/amirmbn/UDP2RAW/main/udp2raw.s
 
 
 ![Login](./images/udp2raw.webp)
+
+<div align="right">
+
+هنگامی که به تنهایی استفاده می‌شود، udp2raw فقط ترافیک UDP را تونل می‌کند. با این وجود، اگر از udp2raw + هر VPN مبتنی بر UDP با هم استفاده کنید، می‌توانید هر ترافیکی (شامل TCP/UDP/ICMP) را تونل کنید، در حال حاضر OpenVPN/L2TP/ShadowVPN و tinyfecVPN پشتیبانی می‌شوند.
+</div>
+
 ![Login](./images/udp2rawopenvpn.webp)
