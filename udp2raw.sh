@@ -82,7 +82,7 @@ install() {
     echo ""
     echo -e "${YELLOW}Downloading and installing udp2raw for architecture: $system_architecture (${binary_asset})${NC}"
     
-    if ! curl -L -o /root/udp2raw "https://github.com/amirmbn/UDP2RAW/releases/download/1/${binary_asset}"; then
+    if ! curl -L -o /root/udp2raw "https://github.com/amirmbn/UDP2RAW/releases/latest/download/${binary_asset}"; then
         echo -e "${RED}Failed to download ${binary_asset}. Please check your internet connection.${NC}"
         return 1
     fi
