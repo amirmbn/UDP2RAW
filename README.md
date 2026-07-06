@@ -11,3 +11,10 @@
 bash <(curl -Ls https://raw.githubusercontent.com/amirmbn/UDP2RAW/main/udp2raw.sh)
 ```
 </div>
+<div align="right">
+
+
+ - شماره 1 مربوط به تنظیمات سرور خارج است
+ - شماره 2 مربوط به تنظیمات سرور ایران است
+ - و گزینه 3 هم برای حذف کامل قوانین و تانل است
+</div>
